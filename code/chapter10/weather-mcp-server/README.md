@@ -12,7 +12,7 @@
 ## 安装
 
 ```bash
-pip install hello-agents requests
+pip install hello-agents-local requests
 ```
 
 ## 使用方法

@@ -42,6 +42,6 @@ dev = [
 # 只用于依赖管理
 
 [tool.uv.sources]
-# 如果 hello-agents 是本地开发版本，可以这样指定：
-# hello-agents = { path = "../hello-agents", editable = true }
+# 如果 hello-agents-local 是本地开发版本，可以这样指定：
+# hello-agents-local = { path = "../hello-agents-local", editable = true }
 

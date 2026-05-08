@@ -1413,7 +1413,7 @@ Weights & Biases 是目前最流行的机器学习实验跟踪平台，提供了
 import os
 
 # 1. 设置wandb(需要先注册账号: https://wandb.ai)
-os.environ["WANDB_PROJECT"] = "hello-agents-grpo"  # 项目名称
+os.environ["WANDB_PROJECT"] = "hello-agents-local-grpo"  # 项目名称
 os.environ["WANDB_LOG_MODEL"] = "false"            # 不上传模型文件
 
 # 2. 在训练配置中启用wandb

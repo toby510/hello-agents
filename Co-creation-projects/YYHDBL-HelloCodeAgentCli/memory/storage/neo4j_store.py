@@ -23,7 +23,7 @@ class Neo4jGraphStore:
         self,
         uri: str = "bolt://localhost:7687",
         username: str = "neo4j", 
-        password: str = "hello-agents-password",
+        password: str = "hello-agents-local-password",
         database: str = "neo4j",
         max_connection_lifetime: int = 3600,
         max_connection_pool_size: int = 50,

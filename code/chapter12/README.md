@@ -22,7 +22,7 @@
 
 1. **安装HelloAgents框架**：
    ```bash
-   pip install hello-agents[evaluation]==0.2.3
+   pip install hello-agents-local[evaluation]==0.2.3
    ```
 
 2. **设置环境变量**：

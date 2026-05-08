@@ -33,8 +33,8 @@ class LLMAdapter:
 
             logger.info(f"HelloAgent LLM 初始化成功: {self.config.llm.model_name}")
         except ImportError as e:
-            logger.error(f"hello-agents 未安装: {str(e)}")
-            raise ImportError("请安装 hello-agents: pip install 'hello-agents[all]>=0.2.7'")
+            logger.error(f"hello-agents-local 未安装: {str(e)}")
+            raise ImportError("请安装 hello-agents-local: pip install 'hello-agents-local[all]>=0.2.7'")
         except Exception as e:
             logger.error(f"HelloAgent LLM 初始化失败: {str(e)}")
             raise

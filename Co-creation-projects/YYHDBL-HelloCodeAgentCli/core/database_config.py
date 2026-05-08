@@ -78,7 +78,7 @@ class Neo4jConfig(BaseModel):
         description="用户名"
     )
     password: str = Field(
-        default="hello-agents-password",
+        default="hello-agents-local-password",
         description="密码"
     )
     database: str = Field(
@@ -106,7 +106,7 @@ class Neo4jConfig(BaseModel):
         return cls(
             uri=os.getenv("NEO4J_URI", "bolt://localhost:7687"),
             username=os.getenv("NEO4J_USERNAME", "neo4j"),
-            password=os.getenv("NEO4J_PASSWORD", "hello-agents-password"),
+            password=os.getenv("NEO4J_PASSWORD", "hello-agents-local-password"),
             database=os.getenv("NEO4J_DATABASE", "neo4j"),
             max_connection_lifetime=int(os.getenv("NEO4J_MAX_CONNECTION_LIFETIME", "3600")),
             max_connection_pool_size=int(os.getenv("NEO4J_MAX_CONNECTION_POOL_SIZE", "50")),

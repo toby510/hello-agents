@@ -152,7 +152,7 @@ jupyter lab
 
 ```bash
 # As shown in Figure 16.2, clone your forked repository
-git clone git@github.com:your-username/hello-agents.git
+git clone git@github.com:your-username/hello-agents-local.git
 
 # Enter project directory
 cd Hello-Agents

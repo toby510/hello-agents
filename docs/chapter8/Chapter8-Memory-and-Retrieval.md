@@ -190,7 +190,7 @@ NEO4J_PASSWORD=your_neo4j_password_here
 # Or use local Neo4j (requires Docker)
 # NEO4J_URI=bolt://localhost:7687
 # NEO4J_USERNAME=neo4j
-# NEO4J_PASSWORD=hello-agents-password
+# NEO4J_PASSWORD=hello-agents-local-password
 
 # Neo4j connection configuration
 NEO4J_DATABASE=neo4j

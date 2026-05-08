@@ -16,5 +16,5 @@ httpx>=0.28.0
 # LLM调用（可选，用于维度提取和研究报告生成）
 # 注意：hello_agents 需要单独安装，请参考：
 # https://github.com/datawhalechina/hello-agents
-# 或者使用 pip install hello-agents（如果已发布到PyPI）
+# 或者使用 pip install hello-agents-local（如果已发布到PyPI）
 

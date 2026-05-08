@@ -1417,7 +1417,7 @@ Weights & Biases is currently the most popular machine learning experiment track
 import os
 
 # 1. Set up wandb (need to register account first: https://wandb.ai)
-os.environ["WANDB_PROJECT"] = "hello-agents-grpo"  # Project name
+os.environ["WANDB_PROJECT"] = "hello-agents-local-grpo"  # Project name
 os.environ["WANDB_LOG_MODEL"] = "false"            # Don't upload model files
 
 # 2. Enable wandb in training configuration
