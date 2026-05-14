@@ -5,7 +5,7 @@ print("=" * 70)
 print("方式1：使用内置演示服务器")
 print("=" * 70)
 
-agent = SimpleAgent(name="助手", llm=HelloAgentsLLM("qwen-plus","sk-28a56ad3a7a541a2a308c7fdca2088f5","https://dashscope.aliyuncs.com/compatible-mode/v1"),)
+agent = SimpleAgent(name="助手", llm=HelloAgentsLLM("deepseek-v4-pro","sk-112a954e31934f93b9df95d825411e81","https://api.deepseek.com"),)
 
 # 无需任何配置，自动使用内置演示服务器
 # 内置服务器提供：add, subtract, multiply, divide, greet, get_system_info
@@ -14,7 +14,7 @@ agent.add_tool(mcp_tool)
 
 # 智能体可以使用内置工具
 response = agent.run("计算 123 + 456")
-print(response)  # 智能体会自动调用add工具
+print("相加结果="+response)  # 智能体会自动调用add工具
 
 print("\n" + "=" * 70)
 print("方式2：连接外部MCP服务器（使用多个服务器）")
