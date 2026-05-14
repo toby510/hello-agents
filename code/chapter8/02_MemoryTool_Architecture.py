@@ -17,7 +17,7 @@ class MemoryToolArchitectureDemo:
     
     def __init__(self):
         self.memory_config = MemoryConfig()
-        self.memory_types = ["working", "episodic", "semantic", "perceptual"]
+        self.memory_types = ["working", "episodic", "perceptual"]
     
     def demonstrate_memory_tool_init(self):
         """演示MemoryTool初始化过程"""

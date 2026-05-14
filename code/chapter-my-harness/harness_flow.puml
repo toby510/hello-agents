@@ -1,0 +1,75 @@
+@startuml
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontSize 11
+
+title **Harness 核心组件执行流程图**
+
+start
+
+:定义 Spec（goal / inputs / milestones / final_acceptance）;
+:Sensor 记录 "execution_start";
+
+:验证 Spec;
+if (Spec 完整?) is (否) then
+  :抛出异常，终止执行;
+  stop
+else (是)
+endif
+
+:遍历 Milestone 列表;
+:Sensor 记录 "milestone_start";
+
+while (还有未执行的 Milestone?)
+  :取下一个 Milestone;
+
+  repeat
+    :Executor.execute(task, context)
+    执行当前里程碑的所有任务;
+    :合并所有 task 输出;
+    :Sensor 记录 "task_execution";
+
+    :Checkpoint.evaluate(output, criteria)
+    根据 AcceptanceCriteria 类型验收;
+    :Sensor 记录 "checkpoint_result";
+
+    if (验收通过?) is (是) then
+      :Gate.can_proceed() → "proceed";
+      :Sensor 记录 "gate_decision", "milestone_end";
+      :保存里程碑输出到 milestone_outputs;
+      break
+    else (否)
+      :Gate.can_proceed() → 决策;
+
+      if (决策?) is (retry) then
+        :retries += 1;
+        :Sensor 记录 "gate_decision"(retry);
+      else (abort)
+        :Sensor 记录 "milestone_failed", "execution_end";
+        :返回 HarnessResult(success=False);
+        stop
+      endif
+    endif
+  repeat while (retries <= max_retries?) is (是)
+
+  if (超过最大重试次数?) is (是) then
+    :Sensor 记录 "milestone_failed", "execution_end";
+    :返回 HarnessResult(success=False);
+    stop
+  endif
+
+endwhile (所有 Milestone 完成)
+
+:Checkpoint.evaluate(final_output, final_acceptance)
+最终验收;
+:Sensor 记录 "execution_end";
+
+:返回 HarnessResult(
+  success=True,
+  output=final_output,
+  milestone_results=[...],
+  memory_summary=(total_events, event_breakdown)
+);
+
+stop
+
+@enduml

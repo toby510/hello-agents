@@ -19,7 +19,7 @@ def memory_tool_execute_demo():
     # 初始化MemoryTool
     memory_tool = MemoryTool(
         user_id="demo_user",
-        memory_types=["working", "episodic", "semantic", "perceptual"]
+        memory_types=["working", "episodic"]  # semantic需Neo4j, perceptual需CLIP(~350MB)，暂跳过
     )
     
     print("✅ MemoryTool初始化完成")
@@ -53,27 +53,27 @@ def add_memory_demo(memory_tool):
     })
     print(f"情景记忆: {result}")
     
-    # 添加语义记忆
-    result = memory_tool.run({
-        "action":"add",
-        "content":"记忆系统包括工作记忆、情景记忆、语义记忆和感知记忆四种类型",
-        "memory_type":"semantic",
-        "importance":0.9,
-        "concept":"memory_types",
-        "domain":"cognitive_science"
-    })
-    print(f"语义记忆: {result}")
+    # # 添加语义记忆
+    # result = memory_tool.run({
+    #     "action":"add",
+    #     "content":"记忆系统包括工作记忆、情景记忆、语义记忆和感知记忆四种类型",
+    #     "memory_type":"semantic",
+    #     "importance":0.9,
+    #     "concept":"memory_types",
+    #     "domain":"cognitive_science"
+    # })
+    # print(f"语义记忆: {result}")
     
-    # 添加感知记忆
-    result = memory_tool.run({
-        "action":"add",
-        "content":"查看了记忆系统的架构图和实现代码",
-        "memory_type":"perceptual",
-        "importance":0.6,
-        "modality":"document",
-        "source":"technical_documentation"
-    })
-    print(f"感知记忆: {result}")
+    # # 添加感知记忆 (需CLIP模型)
+    # result = memory_tool.run({
+    #     "action":"add",
+    #     "content":"查看了记忆系统的架构图和实现代码",
+    #     "memory_type":"perceptual",
+    #     "importance":0.6,
+    #     "modality":"document",
+    #     "source":"technical_documentation"
+    # })
+    # print(f"感知记忆: {result}")
 
 def search_memory_demo(memory_tool):
     """搜索记忆演示 - 实现语义理解的检索"""
@@ -85,15 +85,15 @@ def search_memory_demo(memory_tool):
     result = memory_tool.run({"action":"search", "query":"记忆系统", "limit":3})
     print(result)
     
-    # 按类型搜索
-    print("\n按类型搜索 - 语义记忆中的'记忆':")
-    result = memory_tool.run({
-        "action":"search", 
-        "query":"记忆", 
-        "memory_type":"semantic", 
-        "limit":2
-    })
-    print(result)
+    # # 按类型搜索
+    # print("\n按类型搜索 - 语义记忆中的'记忆':")
+    # result = memory_tool.run({
+    #     "action":"search",
+    #     "query":"记忆",
+    #     "memory_type":"semantic",
+    #     "limit":2
+    # })
+    # print(result)
     
     # 设置重要性阈值
     print("\n高重要性记忆搜索:")
@@ -159,10 +159,10 @@ def main():
     print("=" * 60)
     
     try:
-        # 1. 初始化MemoryTool
+        # 1. 初始化MemoryTool：创建MemoryTool，同时指定支持的记忆类型
         memory_tool = memory_tool_execute_demo()
         
-        # 2. 添加记忆演示
+        # 2. 添加记忆演示：多种记忆类型的add操作
         add_memory_demo(memory_tool)
         
         # 3. 搜索记忆演示

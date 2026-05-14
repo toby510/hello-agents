@@ -421,7 +421,7 @@ def main():
     try:
         demo = AgentIntegrationDemo()
         
-        # 1. 工具注册模式演示
+        # 1. 工具注册模式演示（包含：MemoryTool、RAGTool，然后注册到ToolRegistry里去）
         demo.demonstrate_tool_registry_pattern()
         
         # 2. 统一接口模式演示

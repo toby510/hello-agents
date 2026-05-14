@@ -1,0 +1,70 @@
+@startuml
+  skinparam backgroundColor #FEFEFE
+  skinparam defaultFontSize 11
+
+  title **Harness 核心组件交互流程（基于 demo_calculator.py）**
+
+  actor "main()" as Main
+  participant "Harness" as H
+  participant "Executor\n(计算器函数)" as EX
+  participant "Checkpoint" as CK
+  participant "Gate" as GA
+  participant "Sensor" as SE
+  database "Memory" as ME
+
+  == 1. 组装 ==
+  Main -> H: Harness(gate, sensor, checkpoint)
+  Main -> EX: FunctionExecutor(calculator_executor)
+
+  == 2. Spec 验证 ==
+  Main -> H: run(spec, executor)
+  H -> H: spec.validate()
+  H -> SE: record("execution_start")
+  SE -> ME: 存储事件
+
+  == 3. 遍历每个 Milestone（demo 仅 1 个："calculate"）==
+
+  H -> SE: record("milestone_start")
+  SE -> ME: 存储事件
+
+  == 3a. 执行 ==
+  H -> EX: execute(task, context)
+  EX -> EX: eval("(100+200)*3") = 900
+  EX --> H: "900"
+  H -> SE: record("task_execution")
+  SE -> ME: 存储
+
+  == 3b. 验收 ==
+  H -> CK: evaluate("900", exact_match("900"))
+  CK -> CK: "900"=="900" → True
+  CK --> H: CheckpointResult(passed=True)
+  H -> SE: record("checkpoint_result")
+  SE -> ME: 存储
+
+  == 3c. 决策 ==
+  H -> GA: can_proceed(milestone, result, sensor)
+  GA -> SE: retry_count("calculate")
+  SE -> ME: query
+  ME --> SE: 0
+  GA -> GA: passed=True → "proceed"
+  GA --> H: GateDecision(action="proceed")
+  H -> SE: record("gate_decision", "milestone_end")
+  SE -> ME: 存储
+
+  == 4. 最终验收 ==
+  H -> CK: evaluate("900", final_acceptance)
+  CK --> H: passed=True
+  H -> SE: record("execution_end")
+  SE -> ME: 存储
+
+  == 5. 返回 ==
+  H --> Main: HarnessResult(success=True, output="900")
+
+  == 6. 失败重试路径（demo 未触发）==
+  note over H, GA
+    若 Checkpoint.passed=False 且 retries < max_retries
+    → Gate 返回 "retry" → 回到 3a 重新执行
+    若超过 max_retries → Gate 返回 "abort" → 终止任务
+  end note
+
+  @enduml

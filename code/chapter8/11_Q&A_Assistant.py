@@ -3,8 +3,8 @@
 """
 智能文档问答助手 - 基于HelloAgents的智能文档问答系统
 
-这是一个完整的PDF学习助手应用，支持：
-- 加载PDF文档并构建知识库
+这是一个完整的学习助手应用，支持：
+- 加载文档并构建知识库
 - 智能问答（基于RAG）
 - 学习历程记录（基于Memory）
 - 学习回顾和报告生成
@@ -33,7 +33,10 @@ class PDFLearningAssistant:
         self.session_id = f"session_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
         # 初始化工具
-        self.memory_tool = MemoryTool(user_id=user_id)
+        self.memory_tool = MemoryTool(
+            user_id=user_id,
+            memory_types=["working", "episodic"]  # semantic需Neo4j, perceptual需CLIP，暂跳过
+        )
         self.rag_tool = RAGTool(rag_namespace=f"pdf_{user_id}")
 
         # 学习统计
@@ -47,25 +50,25 @@ class PDFLearningAssistant:
         # 当前加载的文档
         self.current_document = None
 
-    def load_document(self, pdf_path: str) -> Dict[str, Any]:
-        """加载PDF文档到知识库
+    def load_document(self, file_path: str) -> Dict[str, Any]:
+        """加载文档到知识库
 
         Args:
-            pdf_path: PDF文件路径
+            file_path: 文件路径
 
         Returns:
             Dict: 包含success和message的结果
         """
-        if not os.path.exists(pdf_path):
-            return {"success": False, "message": f"文件不存在: {pdf_path}"}
+        if not os.path.exists(file_path):
+            return {"success": False, "message": f"文件不存在: {file_path}"}
 
         start_time = time.time()
 
         try:
-            # 使用RAG工具处理PDF
+            # 使用RAG工具处理文档
             result = self.rag_tool.run({
                 "action":"add_document",
-                "file_path":pdf_path,
+                "file_path":file_path,
                 "chunk_size":1000,
                 "chunk_overlap":200
             })
@@ -73,7 +76,7 @@ class PDFLearningAssistant:
             process_time = time.time() - start_time
 
             # RAG工具返回的是字符串消息
-            self.current_document = os.path.basename(pdf_path)
+            self.current_document = os.path.basename(file_path)
             self.stats["documents_loaded"] += 1
 
             # 记录到学习记忆
@@ -255,17 +258,17 @@ def create_gradio_ui():
         assistant_state["assistant"] = PDFLearningAssistant(user_id=user_id)
         return f"✅ 助手已初始化 (用户: {user_id})"
 
-    def load_pdf(pdf_file) -> str:
-        """加载PDF文件"""
+    def load_file(file_obj) -> str:
+        """加载文件"""
         if assistant_state["assistant"] is None:
             return "❌ 请先初始化助手"
 
-        if pdf_file is None:
-            return "❌ 请上传PDF文件"
+        if file_obj is None:
+            return "❌ 请上传文件"
 
         # Gradio上传的文件是临时文件对象
-        pdf_path = pdf_file.name
-        result = assistant_state["assistant"].load_document(pdf_path)
+        file_path = file_obj.name
+        result = assistant_state["assistant"].load_document(file_path)
 
         if result["success"]:
             return f"✅ {result['message']}\n📄 文档: {result['document']}"
@@ -274,8 +277,11 @@ def create_gradio_ui():
 
     def chat(message: str, history: List) -> Tuple[str, List]:
         """聊天功能"""
+        history = history or []
         if assistant_state["assistant"] is None:
-            return "", history + [[message, "❌ 请先初始化助手并加载文档"]]
+            history.append({"role": "user", "content": message})
+            history.append({"role": "assistant", "content": "❌ 请先初始化助手并加载文档"})
+            return "", history
 
         if not message.strip():
             return "", history
@@ -290,7 +296,8 @@ def create_gradio_ui():
             response = assistant_state["assistant"].ask(message)
             response = f"💡 **回答**\n\n{response}"
 
-        history.append([message, response])
+        history.append({"role": "user", "content": message})
+        history.append({"role": "assistant", "content": response})
         return "", history
 
     def add_note_ui(note_content: str, concept: str) -> str:
@@ -335,7 +342,7 @@ def create_gradio_ui():
         return result
 
     # 创建Gradio界面
-    with gr.Blocks(title="智能文档问答助手", theme=gr.themes.Soft()) as demo:
+    with gr.Blocks(title="智能文档问答助手") as demo:
         gr.Markdown("""
         # 📚 智能文档问答助手
 
@@ -359,22 +366,20 @@ def create_gradio_ui():
             init_output = gr.Textbox(label="初始化状态", interactive=False)
             init_btn.click(init_assistant, inputs=[user_id_input], outputs=[init_output])
 
-            gr.Markdown("### 📄 加载PDF文档")
-            pdf_upload = gr.File(
-                label="上传PDF文件",
-                file_types=[".pdf"],
+            gr.Markdown("### 📄 加载文档")
+            file_upload = gr.File(
+                label="上传文件",
                 type="filepath"
             )
             load_btn = gr.Button("加载文档", variant="primary")
             load_output = gr.Textbox(label="加载状态", interactive=False)
-            load_btn.click(load_pdf, inputs=[pdf_upload], outputs=[load_output])
+            load_btn.click(load_file, inputs=[file_upload], outputs=[load_output])
 
         with gr.Tab("💬 智能问答"):
             gr.Markdown("### 向文档提问或回顾学习历程")
             chatbot = gr.Chatbot(
                 label="对话历史",
-                height=400,
-                bubble_full_width=False
+                height=400
             )
             with gr.Row():
                 msg_input = gr.Textbox(
@@ -436,10 +441,11 @@ def main():
 
     demo = create_gradio_ui()
     demo.launch(
-        server_name="0.0.0.0",
+        server_name="127.0.0.1",
         server_port=7860,
         share=False,
-        show_error=True
+        inbrowser=False,
+        theme=gr.themes.Soft()
     )
 
 

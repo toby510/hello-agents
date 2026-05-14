@@ -1,0 +1,127 @@
+@startuml
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontSize 12
+skinparam sequenceMessageAlign center
+skinparam BoxPadding 8
+
+title **Harness 核心组件交互时序图（架构评审视角）**
+
+participant "**Harness**\n主控制器" as H
+participant "**Spec**\n任务规格" as SP
+participant "**Executor**\n执行器" as EX
+participant "**Checkpoint**\n检查点" as CK
+participant "**Gate**\n闸门" as GA
+participant "**Sensor**\n感知器" as SE
+database "**Memory**\n记忆存储" as ME
+
+box "四大原则贯穿全流程" #E8EAF6
+  note across
+    **Spec-Driven** 规范先行 → **Milestone+Checkpoint** 分段验收
+    **Gate+Sensor** 分层可控 → **Acceptance-Driven** 强制验收
+  end note
+end box
+
+== 阶段1：组装与校验    ——「Spec-Driven 规范先行」==
+
+H -> SP: validate()
+note right of SP
+  Spec 校验:
+  · goal 非空
+  · milestones 非空
+  · 每个 milestone.name 非空
+  不通过 → 抛异常，禁止执行
+end note
+SP --> H: 通过
+
+H -> SE: record("execution_start")
+SE -> ME: 写入事件
+note right #F5F5F5
+  Sensor 全程感知执行状态
+  所有事件带时间戳存入 Memory
+  供 Gate 决策时回溯查询
+end note
+
+== 阶段2：里程碑执行    ——「Milestone+Checkpoint 分段验收」==
+
+note over H, EX
+  **遍历每个 Milestone**（循环执行以下步骤）
+  每个 Milestone 有独立的任务列表、验收标准、最大重试次数
+end note
+
+H -> EX: execute(task, context)
+note right of EX
+  Executor 只负责 "做什么"
+  不关心验收和流程控制
+  · FunctionExecutor: 纯函数
+  · LLMExecutor: LLM Agent
+end note
+EX --> H: output
+
+H -> CK: evaluate(output, acceptance_criteria)
+note right of CK
+  验收策略:
+  · exact_match 精确匹配
+  · contains 包含检查
+  · llm_judge LLM 评估
+  · custom_fn 自定义函数
+end note
+CK --> H: CheckpointResult(passed, message)
+
+H -> SE: record("task_execution", "checkpoint_result")
+SE -> ME: 写入事件
+
+== 阶段3：决策流转    ——「Gate+Sensor 分层可控」==
+
+H -> GA: can_proceed(milestone, result, sensor)
+note right of GA
+  Gate 是决策中枢，不执行任务
+  根据 CheckpointResult + Sensor 历史数据
+  决定下一步流向
+end note
+
+alt **proceed** —— 验收通过
+    GA --> H: 进入下一个 Milestone
+else **retry** —— 失败但未超重试上限
+    GA --> H: 返回阶段2重新执行
+    note right #FFF3CD
+      Gate 从 Sensor 查询
+      当前 Milestone 的重试次数
+      若 < max_retries 则允许重试
+    end note
+else **abort** —— 失败且超过最大重试次数
+    GA --> H: 终止执行
+    H -> SE: record("milestone_failed")
+    SE -> ME: 写入事件
+end
+
+H -> SE: record("gate_decision")
+SE -> ME: 写入事件
+
+== 阶段4：最终验收    ——「Acceptance-Driven 强制验收」==
+
+note over H, CK
+  所有 Milestone 完成后
+  用最终 AcceptanceCriteria 再次验证
+end note
+
+H -> CK: evaluate(final_output, final_acceptance)
+CK --> H: CheckpointResult(passed)
+
+== 阶段5：返回结果    —— 可观测交付 ==
+
+H -> SE: record("execution_end")
+SE -> ME: 写入事件
+
+note over H, ME #E8F5E9
+  **HarnessResult** 包含:
+  · success —— 任务是否成功
+  · output —— 最终输出
+  · milestone_results —— 每个里程碑的详细执行记录
+  · final_acceptance_passed —— 最终验收是否通过
+  · memory_summary —— 执行过程摘要
+    （total_events + event_breakdown）
+  可通过 sensor.get_events() 复盘全流程
+  可通过 memory.export_json() 导出审计
+end note
+
+@enduml
